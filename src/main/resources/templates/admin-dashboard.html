@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head('Admin Dashboard')}"></head>
+<body class="admin-body">
+<header th:replace="~{fragments/navbar :: adminNav}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <div class="page-header split">
+        <div>
+            <p class="eyebrow">STORE MANAGEMENT</p>
+            <h1 class="page-title">Welcome, <span sec:authentication="principal.name">Administrator</span></h1>
+            <p class="page-subtitle">Here is your bookstore at a glance.</p>
+        </div>
+        <a class="button button-primary" th:href="@{/admin/books/new}">+ Add a book</a>
+    </div>
+
+    <div class="stats-grid">
+        <a class="stat-card" th:href="@{/admin/books}">
+            <p class="eyebrow">BOOKS</p>
+            <h2 th:text="${stats.totalBooks}">0</h2>
+            <p>Books in the store</p>
+        </a>
+        <a class="stat-card" th:href="@{/admin/customers}">
+            <p class="eyebrow">CUSTOMERS</p>
+            <h2 th:text="${stats.customers}">0</h2>
+            <p>Registered customers</p>
+        </a>
+        <a class="stat-card" th:href="@{/admin/orders}">
+            <p class="eyebrow">ORDERS</p>
+            <h2 th:text="${stats.orders}">0</h2>
+            <p><span th:text="${stats.pendingOrders}">0</span> pending</p>
+        </a>
+        <a class="stat-card" th:href="@{/admin/inventory}">
+            <p class="eyebrow">INVENTORY</p>
+            <h2 th:text="${stats.unitsInStock}">0</h2>
+            <p>Copies in stock · <span th:text="${stats.lowStockBooks}">0</span> low</p>
+        </a>
+        <div class="stat-card">
+            <p class="eyebrow">COD COLLECTED</p>
+            <h2 th:text="'₹' + ${#numbers.formatDecimal(stats.deliveredRevenue, 1, 'COMMA', 2, 'POINT')}">₹0</h2>
+            <p>From delivered orders</p>
+        </div>
+    </div>
+
+    <div class="admin-grid">
+        <section class="card">
+            <div class="section-head">
+                <h2 class="card-title">Recent orders</h2>
+                <a class="text-link" th:href="@{/admin/orders}">All orders →</a>
+            </div>
+            <p class="muted" th:if="${#lists.isEmpty(recentOrders)}">No orders yet.</p>
+            <div class="table-wrap" th:unless="${#lists.isEmpty(recentOrders)}">
+                <table class="data-table">
+                    <thead><tr><th scope="col">Order</th><th scope="col">Customer</th><th scope="col">Total</th><th scope="col">Status</th></tr></thead>
+                    <tbody>
+                    <tr th:each="o : ${recentOrders}">
+                        <td data-label="Order"><a th:href="@{/admin/orders/{id}(id=${o.id})}" th:text="'#' + ${o.id}">#1</a></td>
+                        <td data-label="Customer" th:text="${o.customerName}">Name</td>
+                        <td data-label="Total" th:text="'₹' + ${#numbers.formatDecimal(o.totalAmount, 1, 'COMMA', 2, 'POINT')}">₹0</td>
+                        <td data-label="Status"><span class="status-pill" th:classappend="'status-' + ${o.status.key}" th:text="${o.status.label}">Pending</span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="section-head">
+                <h2 class="card-title">Low stock</h2>
+                <a class="text-link" th:href="@{/admin/inventory(low=true)}">Manage →</a>
+            </div>
+            <p class="muted" th:if="${#lists.isEmpty(lowStock)}">All books have healthy stock.</p>
+            <ul class="plain-list" th:unless="${#lists.isEmpty(lowStock)}">
+                <li th:each="b : ${lowStock}">
+                    <span th:text="${b.name}">Title</span>
+                    <span class="stock-pill inline" th:classappend="${b.stockQuantity == 0} ? 'stock-out' : 'stock-low'"
+                          th:text="${b.stockQuantity == 0 ? 'Out of stock' : b.stockQuantity + ' left'}">2 left</span>
+                </li>
+            </ul>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: adminFooter}"></footer>
+</body>
+</html>

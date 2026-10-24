@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Order #' + ${order.id})}"></head>
+<body class="admin-body">
+<header th:replace="~{fragments/navbar :: adminNav}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a th:href="@{/admin/orders}">Orders</a> <span>/</span> <span aria-current="page" th:text="'#' + ${order.id}">#1</span>
+    </nav>
+
+    <div class="page-header split">
+        <div>
+            <p class="eyebrow" th:text="'PLACED ' + ${#strings.toUpperCase(#temporals.format(order.orderDate, 'dd MMM yyyy, hh:mm a'))}">PLACED</p>
+            <h1 class="page-title" th:text="'Order #' + ${order.id}">Order</h1>
+        </div>
+        <span class="status-pill large" th:classappend="'status-' + ${order.status.key}" th:text="${order.status.label}">Pending</span>
+    </div>
+
+    <div class="cart-layout">
+        <section class="card">
+            <h2 class="card-title">Items</h2>
+            <div th:replace="~{order-detail :: itemsTable(${order})}"></div>
+        </section>
+
+        <aside class="cart-summary card">
+            <p class="eyebrow">UPDATE STATUS</p>
+            <form th:unless="${order.status.final}" th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post"
+                  class="stack-form">
+                <div class="field">
+                    <label for="status">Move order to</label>
+                    <select id="status" name="status" required>
+                        <option th:each="s : ${order.status.nextStatuses}" th:value="${s.key}" th:text="${s.label}">Confirmed</option>
+                    </select>
+                </div>
+                <p class="hint">Allowed: Pending → Confirmed → Shipped → Delivered. Pending or Confirmed orders can be
+                    cancelled; cancelling returns the stock.</p>
+                <button class="button button-primary full" type="submit" data-confirm="Update the order status?">Update status</button>
+            </form>
+            <p class="hint" th:if="${order.status.final}">This order is <strong th:text="${order.status.label}">final</strong>; its status can no longer change.</p>
+
+            <p class="eyebrow">CUSTOMER</p>
+            <p>
+                <strong th:text="${order.customerName}">Name</strong><br>
+                <span th:text="${order.phone}">Phone</span><br>
+                <span th:text="${order.address}">Address</span><br>
+                <span class="muted small" th:if="${order.user != null}" th:text="'Account: ' + ${order.user.email}">email</span>
+            </p>
+            <p class="eyebrow">PAYMENT</p>
+            <p><span th:text="${order.paymentMethod.label}">COD</span> · <span th:text="${order.paymentStatus.label}">Pending</span></p>
+            <a class="button button-outline full" th:href="@{/admin/orders}">← All orders</a>
+        </aside>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: adminFooter}"></footer>
+</body>
+</html>

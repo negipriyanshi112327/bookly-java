@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head('Access denied')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar}"></header>
+
+<main id="main" class="auth-page">
+    <section class="auth-card center">
+        <p class="eyebrow">ERROR 403</p>
+        <h1>Access denied</h1>
+        <p class="intro" sec:authorize="hasRole('ADMIN')">
+            Administrator accounts manage the store and cannot use customer features such as the cart,
+            checkout, wishlist or reviews. Log out and sign in as a customer to shop.
+        </p>
+        <p class="intro" sec:authorize="hasRole('CUSTOMER')">
+            This page is for store administrators only.
+        </p>
+        <p class="intro" sec:authorize="isAnonymous()">You do not have permission to view this page.</p>
+        <div class="form-actions center">
+            <a class="button button-primary" th:href="@{/}">Go to the store</a>
+            <a class="button button-outline" sec:authorize="hasRole('ADMIN')" th:href="@{/admin/dashboard}">Admin dashboard</a>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

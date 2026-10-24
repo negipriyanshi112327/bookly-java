@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<!-- ===== Store navigation (customers, guests, and admins viewing the store) ===== -->
+<header class="site-header" th:fragment="navbar">
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <a class="logo" th:href="@{/}" aria-label="Bookly home">bookly<span>.</span></a>
+
+    <nav class="main-nav" aria-label="Main navigation">
+        <a class="nav-link" th:classappend="${currentPath == '/'} ? 'active'" th:href="@{/}">Home</a>
+        <a class="nav-link" th:href="@{/#books}">Browse</a>
+        <a class="nav-link" th:classappend="${currentPath == '/book-compass'} ? 'active'"
+           th:href="@{/book-compass}">Book Compass</a>
+        <th:block sec:authorize="hasRole('CUSTOMER')">
+            <a class="nav-link" th:classappend="${#strings.startsWith(currentPath, '/wishlist')} ? 'active'"
+               th:href="@{/wishlist}">Wishlist</a>
+            <a class="nav-link" th:classappend="${#strings.startsWith(currentPath, '/orders')} ? 'active'"
+               th:href="@{/orders}">My Orders</a>
+        </th:block>
+        <a class="nav-link admin-link" sec:authorize="hasRole('ADMIN')" th:href="@{/admin/dashboard}">Admin Dashboard</a>
+    </nav>
+
+    <div class="header-actions">
+        <a class="nav-link cart-link" sec:authorize="!hasRole('ADMIN')" th:href="@{/cart}"
+           th:attr="aria-label='Shopping cart, ' + ${cartCount} + ' items'">
+            Cart <span class="cart-badge" th:text="${cartCount}">0</span>
+        </a>
+
+        <th:block sec:authorize="isAnonymous()">
+            <a class="nav-link" th:href="@{/login}">Login</a>
+            <a class="nav-link signup-link" th:href="@{/register}">Create account</a>
+        </th:block>
+
+        <th:block sec:authorize="isAuthenticated()">
+            <span class="nav-user">Hi, <strong sec:authentication="principal.name">Reader</strong></span>
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button class="nav-link nav-logout" type="submit">Logout</button>
+            </form>
+        </th:block>
+    </div>
+
+    <button class="mobile-menu" type="button" aria-label="Toggle navigation" aria-expanded="false"
+            data-menu-toggle>
+        <span></span><span></span><span></span>
+    </button>
+</header>
+
+<!-- ===== Admin navigation ===== -->
+<header class="site-header admin-header" th:fragment="adminNav">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="logo" th:href="@{/admin/dashboard}">bookly<span>.</span> <small class="logo-tag">Admin</small></a>
+
+    <nav class="main-nav" aria-label="Admin navigation">
+        <a class="nav-link" th:classappend="${currentPath == '/admin/dashboard'} ? 'active'" th:href="@{/admin/dashboard}">Dashboard</a>
+        <a class="nav-link" th:classappend="${#strings.startsWith(currentPath, '/admin/books')} ? 'active'" th:href="@{/admin/books}">Books</a>
+        <a class="nav-link" th:classappend="${#strings.startsWith(currentPath, '/admin/orders')} ? 'active'" th:href="@{/admin/orders}">Orders</a>
+        <a class="nav-link" th:classappend="${#strings.startsWith(currentPath, '/admin/customers')} ? 'active'" th:href="@{/admin/customers}">Customers</a>
+        <a class="nav-link" th:classappend="${#strings.startsWith(currentPath, '/admin/inventory')} ? 'active'" th:href="@{/admin/inventory}">Inventory</a>
+    </nav>
+
+    <div class="header-actions">
+        <a class="nav-link" th:href="@{/}" target="_blank" rel="noopener">View store ↗</a>
+        <span class="nav-user" sec:authorize="isAuthenticated()">
+            <strong sec:authentication="principal.name">Admin</strong>
+        </span>
+        <form th:action="@{/admin/logout}" method="post" class="logout-form">
+            <button class="nav-link nav-logout" type="submit">Logout</button>
+        </form>
+    </div>
+
+    <button class="mobile-menu" type="button" aria-label="Toggle navigation" aria-expanded="false"
+            data-menu-toggle>
+        <span></span><span></span><span></span>
+    </button>
+</header>
+
+<!-- ===== Flash / page messages ===== -->
+<div class="flash-area" th:fragment="flash" aria-live="polite">
+    <div class="alert alert-success" role="status" th:if="${success}">
+        <span th:text="${success}">Done.</span>
+        <a class="alert-link" th:if="${showCartLink}" th:href="@{/cart}">View cart →</a>
+        <button type="button" class="alert-close" aria-label="Dismiss message" data-dismiss>×</button>
+    </div>
+    <div class="alert alert-error" role="alert" th:if="${error}">
+        <span th:text="${error}">Something went wrong.</span>
+        <button type="button" class="alert-close" aria-label="Dismiss message" data-dismiss>×</button>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${form.id == null ? 'Add Book' : 'Edit Book'})}"></head>
+<body class="admin-body">
+<header th:replace="~{fragments/navbar :: adminNav}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a th:href="@{/admin/books}">Books</a> <span>/</span>
+        <span aria-current="page" th:text="${form.id == null} ? 'Add a book' : 'Edit'">Add</span>
+    </nav>
+
+    <div class="page-header">
+        <p class="eyebrow">CATALOGUE</p>
+        <h1 class="page-title" th:text="${form.id == null ? 'Add a book' : 'Edit “' + form.name + '”'}">Add a book</h1>
+    </div>
+
+    <div class="cart-layout">
+        <section class="card">
+            <form th:action="${form.id == null} ? @{/admin/books} : @{/admin/books/{id}(id=${form.id})}"
+                  th:object="${form}" method="post" class="stack-form" novalidate data-validate>
+                <input type="hidden" th:field="*{originalStock}">
+
+                <div class="alert alert-error" role="alert" th:if="${#fields.hasAnyErrors()}">
+                    Please correct the highlighted fields.
+                </div>
+
+                <div class="form-grid">
+                    <div class="field span-2" th:classappend="${#fields.hasErrors('name')} ? 'has-error'">
+                        <label for="name">Title *</label>
+                        <input id="name" type="text" th:field="*{name}" required maxlength="200">
+                        <p class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</p>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('author')} ? 'has-error'">
+                        <label for="author">Author *</label>
+                        <input id="author" type="text" th:field="*{author}" required maxlength="150">
+                        <p class="field-error" th:if="${#fields.hasErrors('author')}" th:errors="*{author}">Error</p>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('category')} ? 'has-error'">
+                        <label for="category">Category *</label>
+                        <input id="category" type="text" th:field="*{category}" required maxlength="60" list="categoryList">
+                        <datalist id="categoryList">
+                            <option th:each="c : ${categories}" th:value="${c}"></option>
+                        </datalist>
+                        <p class="field-error" th:if="${#fields.hasErrors('category')}" th:errors="*{category}">Error</p>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('price')} ? 'has-error'">
+                        <label for="price">Price (₹) *</label>
+                        <input id="price" type="number" th:field="*{price}" required min="1" max="100000" step="0.01">
+                        <p class="field-error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}">Error</p>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('stockQuantity')} ? 'has-error'">
+                        <label for="stockQuantity">Stock quantity *</label>
+                        <input id="stockQuantity" type="number" th:field="*{stockQuantity}" required min="0" max="100000" step="1">
+                        <p class="hint" th:if="${form.id != null}">If an order changes the stock while you edit, you will be asked to check it again.</p>
+                        <p class="field-error" th:if="${#fields.hasErrors('stockQuantity')}" th:errors="*{stockQuantity}">Error</p>
+                    </div>
+                    <div class="field span-2" th:classappend="${#fields.hasErrors('image')} ? 'has-error'">
+                        <label for="image">Cover image URL</label>
+                        <input id="image" type="url" th:field="*{image}" maxlength="500"
+                               placeholder="https://covers.openlibrary.org/b/isbn/9780735211292-L.jpg" data-cover-input>
+                        <p class="hint">Tip: Open Library covers work well — https://covers.openlibrary.org/b/isbn/<em>ISBN</em>-L.jpg</p>
+                        <p class="field-error" th:if="${#fields.hasErrors('image')}" th:errors="*{image}">Error</p>
+                    </div>
+                    <div class="field span-2" th:classappend="${#fields.hasErrors('description')} ? 'has-error'">
+                        <label for="description">Description</label>
+                        <textarea id="description" th:field="*{description}" rows="5" maxlength="2000" data-counter></textarea>
+                        <p class="field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Error</p>
+                    </div>
+                    <label class="choice span-2">
+                        <input type="checkbox" th:field="*{featured}">
+                        <span>Show in “Featured books” on the home page</span>
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button class="button button-primary" type="submit" th:text="${form.id == null} ? 'Add book' : 'Save changes'">Save</button>
+                    <a class="button button-outline" th:href="@{/admin/books}">Cancel</a>
+                </div>
+            </form>
+        </section>
+
+        <aside class="card cover-preview">
+            <p class="eyebrow">COVER PREVIEW</p>
+            <img th:src="${form.image}" alt="Cover preview" data-cover-preview th:hidden="${form.image == null or #strings.isEmpty(form.image)}"
+                 onerror="this.hidden=true">
+            <p class="muted small" th:if="${book != null and !book.active}">This book is archived (hidden from the store).</p>
+        </aside>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: adminFooter}"></footer>
+</body>
+</html>

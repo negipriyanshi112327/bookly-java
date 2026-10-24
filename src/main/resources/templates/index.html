@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Find Your Next Favourite Book')}"></head>
+<body>
+
+<header th:replace="~{fragments/navbar :: navbar}"></header>
+
+<main id="main">
+    <div class="page-flash" th:insert="~{fragments/navbar :: flash}"></div>
+
+    <div class="page-flash" th:if="${param.logout}">
+        <div class="alert alert-info" role="status">You have been logged out. See you soon!</div>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero" th:unless="${filtered}">
+        <div class="hero-content">
+            <div class="eyebrow">
+                <span class="eyebrow-dot"></span>
+                A LITTLE MORE READING, A LOT MORE LIVING
+            </div>
+
+            <h1>
+                Somewhere between<br>
+                the pages, <em>you'll find</em><br>
+                <em>yourself.</em>
+            </h1>
+
+            <p class="hero-description">
+                Welcome to Bookly. Browse our shelves, save favourites to your wishlist,
+                and get books delivered to your door with Cash on Delivery.
+            </p>
+
+            <div class="hero-actions">
+                <a href="#books" class="button button-primary">Shop the collection <span>↗</span></a>
+                <a th:href="@{/book-compass}" class="text-link">Not sure what to read? Try Book Compass →</a>
+            </div>
+
+            <div class="reader-note">
+                <div class="reader-avatars" aria-hidden="true">
+                    <span>R</span><span>A</span><span>M</span>
+                </div>
+                <div>
+                    <strong>For the curious minds.</strong>
+                    <p>And everyone who loves a good story.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+            <div class="art-circle"></div>
+            <div class="art-sun"></div>
+            <div class="art-leaf art-leaf-left"></div>
+            <div class="art-leaf art-leaf-right"></div>
+            <div class="art-books">
+                <div class="art-book art-book-one">
+                    <span class="art-book-small">A COLLECTION OF THOUGHTS</span>
+                    <strong>Quiet<br>Moments</strong>
+                    <span class="art-book-bottom">WORDS TO KEEP</span>
+                </div>
+                <div class="art-book art-book-two">
+                    <span class="art-book-small">BOOKLY EDITION</span>
+                    <strong>The<br>Beautiful<br>Ordinary</strong>
+                    <span class="art-book-bottom">A STORY WORTH KEEPING</span>
+                </div>
+                <div class="art-book art-book-three">
+                    <span class="art-book-small">NOTICE THE LITTLE THINGS</span>
+                    <strong>The Art of<br>Noticing</strong>
+                    <span class="art-book-bottom">YOUR NEXT CHAPTER</span>
+                </div>
+            </div>
+            <p class="art-caption">YOUR NEXT CHAPTER AWAITS <span>✳</span></p>
+        </div>
+
+        <div class="hero-bottom-line">
+            <span>THOUGHTFULLY PICKED. HAPPILY READ.</span>
+            <a href="#books">SCROLL TO DISCOVER ↓</a>
+        </div>
+    </section>
+
+    <!-- FEATURED -->
+    <section class="books-section featured-section" th:unless="${#lists.isEmpty(featured)}">
+        <div class="section-topline">
+            <span>STAFF PICKS</span>
+            <span>FEATURED THIS WEEK ✳</span>
+        </div>
+        <div class="collection-heading">
+            <div>
+                <p class="eyebrow">FEATURED BOOKS</p>
+                <h2>Loved by our <em>readers.</em></h2>
+            </div>
+        </div>
+        <div class="book-grid">
+            <th:block th:each="book : ${featured}">
+                <article th:replace="~{fragments/book-card :: card(${book}, ${ratings[book.id]}, ${#sets.contains(wishlistIds, book.id)})}"></article>
+            </th:block>
+        </div>
+    </section>
+
+    <!-- CATALOGUE -->
+    <section class="books-section" id="books">
+        <div class="section-topline">
+            <span>YOUR NEXT GREAT READ</span>
+            <span>THE BOOKLY COLLECTION ✳</span>
+        </div>
+
+        <div class="collection-heading">
+            <div>
+                <p class="eyebrow">OUR COLLECTION</p>
+                <h2 th:unless="${filtered}">A shelf full of <em>possibilities.</em></h2>
+                <h2 th:if="${filtered}">Search <em>results.</em></h2>
+                <p class="section-description">
+                    <span th:text="${#lists.size(books)}">0</span>
+                    <span th:text="${#lists.size(books) == 1} ? 'book' : 'books'">books</span>
+                    <th:block th:if="${!#strings.isEmpty(query)}"> matching “<strong th:text="${query}">query</strong>”</th:block>
+                    <th:block th:if="${!#strings.isEmpty(selectedCategory)}"> in <strong th:text="${selectedCategory}">category</strong></th:block>
+                </p>
+            </div>
+        </div>
+
+        <form class="filter-bar" method="get" th:action="@{/}" role="search" data-loading-form>
+            <div class="field grow">
+                <label for="bookSearch">Search by title or author</label>
+                <input id="bookSearch" type="search" name="q" th:value="${query}" maxlength="100"
+                       placeholder="e.g. Orwell, habits, Sapiens">
+            </div>
+            <div class="field">
+                <label for="category">Category</label>
+                <select id="category" name="category">
+                    <option value="">All categories</option>
+                    <option th:each="c : ${categories}" th:value="${c}" th:text="${c}"
+                            th:selected="${c == selectedCategory}">Fiction</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="sort">Sort by</label>
+                <select id="sort" name="sort">
+                    <option th:each="o : ${sortOptions}" th:value="${o.key}" th:text="${o.label}"
+                            th:selected="${o.key == selectedSort}">Title</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="button button-primary" data-loading-text="Searching…">Apply</button>
+                <a class="button button-outline" th:if="${filtered}" th:href="@{/#books}">Clear</a>
+            </div>
+        </form>
+
+        <div class="book-grid" th:unless="${#lists.isEmpty(books)}">
+            <th:block th:each="book : ${books}">
+                <article th:replace="~{fragments/book-card :: card(${book}, ${ratings[book.id]}, ${#sets.contains(wishlistIds, book.id)})}"></article>
+            </th:block>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(books)}">
+            <div class="empty-icon" aria-hidden="true">⌕</div>
+            <h3>No books found.</h3>
+            <p>Try another title, author or category — or let Book Compass suggest something.</p>
+            <div class="empty-actions">
+                <a class="button button-primary" th:href="@{/#books}">Browse all books</a>
+                <a class="button button-outline" th:href="@{/book-compass}">Open Book Compass</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- QUOTE -->
+    <section class="quote-section" th:unless="${filtered}">
+        <span class="quote-mark" aria-hidden="true">“</span>
+        <p>Books are a uniquely portable magic.</p>
+        <span class="quote-author">— STEPHEN KING</span>
+    </section>
+
+    <!-- STORY -->
+    <section class="story-section" id="story" th:unless="${filtered}">
+        <div class="story-label">
+            <span class="eyebrow">A NOTE FROM BOOKLY</span>
+            <span class="story-star">✳</span>
+        </div>
+        <h2>Every book opens<br>a <em>different world.</em></h2>
+        <p>
+            We believe the right book can change your perspective, spark an idea,
+            or simply make your day a little better. Bookly is your place to find
+            that next meaningful read.
+        </p>
+        <a class="text-link" th:href="@{/book-compass}">Find your next chapter with Book Compass →</a>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head('Reviews of ' + ${book.name})}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a th:href="@{/}">Home</a> <span>/</span>
+        <a th:href="@{/books/{id}(id=${book.id})}" th:text="${book.name}">Book</a> <span>/</span>
+        <span aria-current="page">Reviews</span>
+    </nav>
+
+    <div class="page-header">
+        <p class="eyebrow">READER REVIEWS</p>
+        <h1 class="page-title" th:text="${book.name}">Title</h1>
+        <p class="page-subtitle" th:if="${rating.count > 0}">
+            <span class="stars" aria-hidden="true"
+                  th:text="${#strings.repeat('★', rating.stars) + #strings.repeat('☆', 5 - rating.stars)}">★★★★☆</span>
+            <strong th:text="${rating.display}">4.0</strong> average from
+            <span th:text="${rating.count}">3</span> review(s)
+        </p>
+        <p class="page-subtitle" th:if="${rating.count == 0}">No reviews yet.</p>
+    </div>
+
+    <div class="compass-layout">
+        <section class="card">
+            <h2 class="card-title" th:text="${hasOwnReview} ? 'Edit your review' : 'Write a review'">Write a review</h2>
+
+            <th:block sec:authorize="isAnonymous()">
+                <p>Please <a th:href="@{/login(required)}">log in</a> with a customer account to review books you have received.</p>
+            </th:block>
+
+            <th:block sec:authorize="hasRole('CUSTOMER')">
+                <p class="hint" th:unless="${canReview}">
+                    Reviews are for verified purchases. You can review this book once an order containing it has been
+                    <strong>delivered</strong>.
+                </p>
+
+                <form th:if="${canReview}" th:action="@{/books/{id}/reviews(id=${book.id})}" th:object="${form}"
+                      method="post" class="stack-form" novalidate data-validate>
+                    <fieldset class="field" th:classappend="${#fields.hasErrors('rating')} ? 'has-error'">
+                        <legend>Your rating</legend>
+                        <div class="star-input">
+                            <th:block th:each="n : ${#numbers.sequence(5, 1)}">
+                                <input type="radio" th:id="'star' + ${n}" name="rating" th:value="${n}"
+                                       th:checked="${form.rating != null and form.rating == n}" required>
+                                <label th:for="'star' + ${n}" th:title="${n} + ' stars'">
+                                    <span class="visually-hidden" th:text="${n} + ' stars'">5 stars</span>★
+                                </label>
+                            </th:block>
+                        </div>
+                        <p class="field-error" th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}">Error</p>
+                    </fieldset>
+                    <div class="field" th:classappend="${#fields.hasErrors('comment')} ? 'has-error'">
+                        <label for="comment">Your review</label>
+                        <textarea id="comment" th:field="*{comment}" rows="5" minlength="10" maxlength="1000" required
+                                  placeholder="What did you like or dislike? (10–1000 characters)" data-counter></textarea>
+                        <p class="field-error" th:if="${#fields.hasErrors('comment')}" th:errors="*{comment}">Error</p>
+                    </div>
+                    <button class="button button-primary" type="submit" th:text="${hasOwnReview} ? 'Update review' : 'Post review'">Post review</button>
+                </form>
+
+                <form th:if="${hasOwnReview}" th:action="@{/books/{id}/reviews/delete(id=${book.id})}" method="post"
+                      data-confirm="Delete your review?">
+                    <button class="link-button danger" type="submit">Delete my review</button>
+                </form>
+            </th:block>
+
+            <p class="hint" sec:authorize="hasRole('ADMIN')">Administrators cannot post reviews.</p>
+        </section>
+
+        <section>
+            <p class="muted" th:if="${#lists.isEmpty(reviews)}">Be the first to share what you thought.</p>
+            <div class="review-list">
+                <article class="review-card" th:each="r : ${reviews}"
+                         th:classappend="${currentUserId != null and r.user.id == currentUserId} ? 'own-review'">
+                    <header>
+                        <span class="stars" th:attr="aria-label=${r.rating} + ' out of 5 stars'"
+                              th:text="${#strings.repeat('★', r.rating) + #strings.repeat('☆', 5 - r.rating)}">★★★★★</span>
+                        <strong th:text="${r.user.name}">Reader</strong>
+                        <span class="badge badge-soft">Verified purchase</span>
+                        <span class="badge" th:if="${currentUserId != null and r.user.id == currentUserId}">Your review</span>
+                        <time class="muted" th:text="${#temporals.format(r.createdAt, 'dd MMM yyyy')}">date</time>
+                        <span class="muted small" th:if="${r.edited}">(edited)</span>
+                    </header>
+                    <p th:text="${r.comment}">Text</p>
+                </article>
+            </div>
+            <a class="button button-outline" th:href="@{/books/{id}(id=${book.id})}">← Back to the book</a>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

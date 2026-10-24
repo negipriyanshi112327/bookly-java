@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Order #' + ${order.id})}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a th:href="@{/orders}">My orders</a> <span>/</span> <span aria-current="page" th:text="'Order #' + ${order.id}">Order</span>
+    </nav>
+
+    <div class="page-header split">
+        <div>
+            <p class="eyebrow" th:text="'PLACED ' + ${#strings.toUpperCase(#temporals.format(order.orderDate, 'dd MMM yyyy, hh:mm a'))}">PLACED</p>
+            <h1 class="page-title" th:text="'Order #' + ${order.id}">Order #1</h1>
+        </div>
+        <span class="status-pill large" th:classappend="'status-' + ${order.status.key}" th:text="${order.status.label}">Pending</span>
+    </div>
+
+    <!-- tracking timeline -->
+    <ol class="tracker" th:unless="${order.status.cancelled}" aria-label="Order progress">
+        <li th:each="step, s : ${#strings.arraySplit('Pending,Confirmed,Shipped,Delivered', ',')}"
+            th:classappend="${order.status.step >= s.index} ? 'done'"
+            th:attr="aria-current=${order.status.step == s.index ? 'step' : null}">
+            <span class="tracker-dot" aria-hidden="true"></span>
+            <span th:text="${step}">Pending</span>
+        </li>
+    </ol>
+    <div class="alert alert-info" th:if="${order.status.cancelled}">
+        This order was cancelled. Any stock was returned to the store and nothing is payable.
+    </div>
+
+    <div class="cart-layout">
+        <section class="card">
+            <h2 class="card-title">Items</h2>
+            <div th:fragment="itemsTable(order)" class="table-wrap">
+                <table class="data-table">
+                    <caption class="visually-hidden">Items in this order</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Book</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Qty</th>
+                        <th scope="col">Subtotal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${order.items}">
+                        <td data-label="Book" th:text="${item.bookName}">Title</td>
+                        <td data-label="Price" th:text="'₹' + ${#numbers.formatDecimal(item.unitPrice, 1, 'COMMA', 2, 'POINT')}">₹0</td>
+                        <td data-label="Qty" th:text="${item.quantity}">1</td>
+                        <td data-label="Subtotal" th:text="'₹' + ${#numbers.formatDecimal(item.subtotal, 1, 'COMMA', 2, 'POINT')}">₹0</td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <th scope="row" colspan="3">Total</th>
+                        <td><strong th:text="'₹' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">₹0</strong></td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        <aside class="cart-summary card">
+            <p class="eyebrow">DELIVERY</p>
+            <p><strong th:text="${order.customerName}">Name</strong><br>
+                <span th:text="${order.phone}">Phone</span><br>
+                <span th:text="${order.address}">Address</span></p>
+            <p class="eyebrow">PAYMENT</p>
+            <p><span th:text="${order.paymentMethod.label}">Cash on Delivery</span> ·
+                <span th:text="${order.paymentStatus.label}">Pay on delivery</span></p>
+
+            <form th:if="${order.status.cancellableByCustomer}" th:action="@{/orders/{id}/cancel(id=${order.id})}"
+                  method="post" data-confirm="Cancel this order? This cannot be undone.">
+                <button class="button button-danger full" type="submit">Cancel order</button>
+            </form>
+            <p class="hint" th:if="${order.status.shipped}">This order has shipped and can no longer be cancelled.</p>
+            <a class="button button-outline full" th:href="@{/orders}">← All orders</a>
+        </aside>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

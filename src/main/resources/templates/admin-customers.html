@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Customers')}"></head>
+<body class="admin-body">
+<header th:replace="~{fragments/navbar :: adminNav}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <div class="page-header">
+        <p class="eyebrow">PEOPLE</p>
+        <h1 class="page-title">Customers</h1>
+        <p class="page-subtitle">Passwords are stored as BCrypt hashes and are never shown here.</p>
+    </div>
+
+    <form class="filter-bar" method="get" th:action="@{/admin/customers}" role="search">
+        <div class="field grow">
+            <label for="q">Search name or email</label>
+            <input id="q" type="search" name="q" th:value="${query}" maxlength="100">
+        </div>
+        <div class="filter-actions">
+            <button class="button button-primary" type="submit">Search</button>
+            <a class="button button-outline" th:href="@{/admin/customers}">Reset</a>
+        </div>
+    </form>
+
+    <div class="empty-state card" th:if="${#lists.isEmpty(customers)}">
+        <h3>No customers found</h3>
+    </div>
+
+    <div class="table-wrap card" th:unless="${#lists.isEmpty(customers)}">
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Joined</th>
+                <th scope="col">Orders</th>
+                <th scope="col">Account</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${customers}" th:classappend="${!c.enabled} ? 'row-muted'">
+                <td data-label="ID" th:text="${c.id}">1</td>
+                <td data-label="Name" th:text="${c.name}">Name</td>
+                <td data-label="Email" th:text="${c.email}">email</td>
+                <td data-label="Joined" th:text="${c.createdAt != null} ? ${#temporals.format(c.createdAt, 'dd MMM yyyy')} : '—'">date</td>
+                <td data-label="Orders">
+                    <a th:if="${c.orderCount > 0}" th:href="@{/admin/orders(q=${c.email})}" th:text="${c.orderCount}">0</a>
+                    <span th:unless="${c.orderCount > 0}">0</span>
+                </td>
+                <td data-label="Account">
+                    <span class="status-pill" th:classappend="${c.enabled} ? 'status-DELIVERED' : 'status-CANCELLED'"
+                          th:text="${c.enabled} ? 'Active' : 'Deactivated'">Active</span>
+                </td>
+                <td class="row-actions">
+                    <form th:action="@{/admin/customers/{id}/status(id=${c.id})}" method="post"
+                          th:attr="data-confirm=${c.enabled ? 'Deactivate ' + c.name + '? They will not be able to log in or order.' : null}">
+                        <input type="hidden" name="enabled" th:value="${!c.enabled}">
+                        <button class="button button-small" type="submit"
+                                th:classappend="${c.enabled} ? 'button-danger' : 'button-outline'"
+                                th:text="${c.enabled} ? 'Deactivate' : 'Activate'">Deactivate</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: adminFooter}"></footer>
+</body>
+</html>

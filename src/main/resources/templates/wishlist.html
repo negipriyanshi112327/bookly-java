@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('My Wishlist')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <div class="page-header">
+        <p class="eyebrow">SAVED FOR LATER</p>
+        <h1 class="page-title">My wishlist</h1>
+        <p class="page-subtitle" th:unless="${#lists.isEmpty(items)}">
+            <span th:text="${#lists.size(items)}">0</span> saved book(s). Your wishlist is kept in your account.
+        </p>
+    </div>
+
+    <div class="empty-state card" th:if="${#lists.isEmpty(items)}">
+        <div class="empty-icon" aria-hidden="true">♡</div>
+        <h3>Your wishlist is empty</h3>
+        <p>Tap the heart on any book to save it here.</p>
+        <a class="button button-primary" th:href="@{/#books}">Browse books</a>
+    </div>
+
+    <div class="wish-list" th:unless="${#lists.isEmpty(items)}">
+        <article class="wish-item card" th:each="item : ${items}" th:with="book=${item.book}">
+            <a class="cart-thumb" th:href="${book.active} ? @{/books/{id}(id=${book.id})} : '#'">
+                <img th:if="${book.image != null}" th:src="${book.image}" th:alt="'Cover of ' + ${book.name}"
+                     loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+                <span class="thumb-fallback" th:hidden="${book.image != null}" th:text="${book.name}">Title</span>
+            </a>
+            <div class="wish-info">
+                <h2 th:text="${book.name}">Title</h2>
+                <p class="muted" th:text="${book.author}">Author</p>
+                <p>
+                    <strong th:text="'₹' + ${#numbers.formatDecimal(book.price, 1, 'COMMA', 2, 'POINT')}">₹0</strong>
+                    <span class="stock-pill inline"
+                          th:classappend="${!book.inStock} ? 'stock-out' : (${book.lowStock} ? 'stock-low' : 'stock-in')"
+                          th:text="${book.availabilityLabel}">In stock</span>
+                </p>
+                <p class="muted small" th:text="'Saved on ' + ${#temporals.format(item.createdAt, 'dd MMM yyyy')}">Saved</p>
+            </div>
+            <div class="wish-actions">
+                <form th:action="@{/wishlist/move-to-cart/{id}(id=${book.id})}" method="post" th:if="${book.inStock}">
+                    <button class="button button-primary button-small" type="submit">Move to cart</button>
+                </form>
+                <form th:action="@{/wishlist/remove/{id}(id=${book.id})}" method="post">
+                    <button class="link-button danger" type="submit">Remove</button>
+                </form>
+            </div>
+        </article>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

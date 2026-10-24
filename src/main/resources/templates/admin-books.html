@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Manage Books')}"></head>
+<body class="admin-body">
+<header th:replace="~{fragments/navbar :: adminNav}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <div class="page-header split">
+        <div>
+            <p class="eyebrow">CATALOGUE</p>
+            <h1 class="page-title">Books</h1>
+            <p class="page-subtitle"><span th:text="${#lists.size(books)}">0</span> book(s) shown. Archived books are hidden from the store.</p>
+        </div>
+        <a class="button button-primary" th:href="@{/admin/books/new}">+ Add a book</a>
+    </div>
+
+    <form class="filter-bar" method="get" th:action="@{/admin/books}" role="search">
+        <div class="field grow">
+            <label for="q">Search title or author</label>
+            <input id="q" type="search" name="q" th:value="${query}" maxlength="100">
+        </div>
+        <div class="field">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                <option value="">All</option>
+                <option th:each="c : ${categories}" th:value="${c}" th:text="${c}" th:selected="${c == selectedCategory}">c</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button class="button button-primary" type="submit">Filter</button>
+            <a class="button button-outline" th:href="@{/admin/books}">Reset</a>
+        </div>
+    </form>
+
+    <div class="empty-state card" th:if="${#lists.isEmpty(books)}">
+        <h3>No books found</h3>
+        <a class="button button-primary" th:href="@{/admin/books/new}">Add a book</a>
+    </div>
+
+    <div class="table-wrap card" th:unless="${#lists.isEmpty(books)}">
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th scope="col">Cover</th>
+                <th scope="col">Title / Author</th>
+                <th scope="col">Category</th>
+                <th scope="col">Price</th>
+                <th scope="col">Stock</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="b : ${books}" th:classappend="${!b.active} ? 'row-muted'">
+                <td data-label="Cover">
+                    <img class="table-thumb" th:if="${b.image != null}" th:src="${b.image}" alt="" loading="lazy"
+                         onerror="this.style.visibility='hidden'">
+                </td>
+                <td data-label="Title">
+                    <strong th:text="${b.name}">Title</strong><br>
+                    <span class="muted small" th:text="${b.author}">Author</span>
+                    <span class="badge" th:if="${b.featured}">Featured</span>
+                </td>
+                <td data-label="Category" th:text="${b.category}">Category</td>
+                <td data-label="Price" th:text="'₹' + ${#numbers.formatDecimal(b.price, 1, 'COMMA', 2, 'POINT')}">₹0</td>
+                <td data-label="Stock">
+                    <span class="stock-pill inline"
+                          th:classappend="${b.stockQuantity == 0} ? 'stock-out' : (${b.lowStock} ? 'stock-low' : 'stock-in')"
+                          th:text="${b.stockQuantity}">0</span>
+                </td>
+                <td data-label="Status" th:text="${b.active} ? 'In store' : 'Archived'">In store</td>
+                <td class="row-actions">
+                    <a class="button button-small button-outline" th:href="@{/admin/books/{id}/edit(id=${b.id})}">Edit</a>
+                    <form th:if="${b.active}" th:action="@{/admin/books/{id}/delete(id=${b.id})}" method="post"
+                          th:attr="data-confirm=${'Remove ' + b.name + '? Books that were ordered before are archived instead of deleted.'}">
+                        <button class="button button-small button-danger" type="submit">Remove</button>
+                    </form>
+                    <form th:unless="${b.active}" th:action="@{/admin/books/{id}/restore(id=${b.id})}" method="post">
+                        <button class="button button-small button-outline" type="submit">Restore</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: adminFooter}"></footer>
+</body>
+</html>

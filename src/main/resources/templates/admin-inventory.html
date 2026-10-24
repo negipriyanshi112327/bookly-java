@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Inventory')}"></head>
+<body class="admin-body">
+<header th:replace="~{fragments/navbar :: adminNav}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <div class="page-header split">
+        <div>
+            <p class="eyebrow">STOCK</p>
+            <h1 class="page-title">Inventory</h1>
+            <p class="page-subtitle">Orders reserve stock automatically and cancellations return it. Stock can never go below 0.</p>
+        </div>
+        <div class="segmented">
+            <a th:classappend="${!lowOnly} ? 'active'" th:href="@{/admin/inventory}">All books</a>
+            <a th:classappend="${lowOnly} ? 'active'" th:href="@{/admin/inventory(low=true)}">Low stock (≤ 5)</a>
+        </div>
+    </div>
+
+    <div class="empty-state card" th:if="${#lists.isEmpty(books)}">
+        <h3 th:text="${lowOnly} ? 'No books are low on stock' : 'No books yet'">Nothing here</h3>
+    </div>
+
+    <div class="table-wrap card" th:unless="${#lists.isEmpty(books)}">
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th scope="col">Book</th>
+                <th scope="col">Price</th>
+                <th scope="col">Current stock</th>
+                <th scope="col">Set new stock</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="b : ${books}" th:classappend="${!b.active} ? 'row-muted'">
+                <td data-label="Book">
+                    <strong th:text="${b.name}">Title</strong><br>
+                    <span class="muted small" th:text="${b.author}">Author</span>
+                    <span class="badge" th:unless="${b.active}">Archived</span>
+                </td>
+                <td data-label="Price" th:text="'₹' + ${#numbers.formatDecimal(b.price, 1, 'COMMA', 2, 'POINT')}">₹0</td>
+                <td data-label="Current stock">
+                    <span class="stock-pill inline"
+                          th:classappend="${b.stockQuantity == 0} ? 'stock-out' : (${b.lowStock} ? 'stock-low' : 'stock-in')"
+                          th:text="${b.stockQuantity}">0</span>
+                </td>
+                <td data-label="Set new stock">
+                    <form class="inline-form" th:action="@{/admin/inventory/{id}(id=${b.id})}" method="post">
+                        <input type="hidden" name="expected" th:value="${b.stockQuantity}">
+                        <input type="hidden" name="low" th:value="${lowOnly}">
+                        <label class="visually-hidden" th:for="'stock-' + ${b.id}" th:text="'New stock for ' + ${b.name}">New stock</label>
+                        <input class="qty-input" type="number" name="stockQuantity" min="0" max="100000" required
+                               th:id="'stock-' + ${b.id}" th:value="${b.stockQuantity}">
+                        <button class="button button-small button-primary" type="submit">Save</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: adminFooter}"></footer>
+</body>
+</html>

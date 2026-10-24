@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Customer Login')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar}"></header>
+
+<main id="main" class="auth-page">
+    <section class="auth-card">
+        <p class="eyebrow">WELCOME BACK</p>
+        <h1>Login to Bookly</h1>
+        <p class="intro">Pick up where your next great story begins.</p>
+
+        <div class="alert alert-info" role="status" th:if="${param.required}">
+            Please log in with your customer account to continue.
+        </div>
+        <div class="alert alert-success" role="status" th:if="${param.registered}">
+            Registration successful! You can now log in.
+        </div>
+        <div class="alert alert-error" role="alert" th:if="${param.error}">
+            Invalid email or password.
+        </div>
+        <div class="alert alert-error" role="alert" th:if="${param.disabled}">
+            This account has been deactivated. Please contact the store.
+        </div>
+
+        <form th:action="@{/login}" method="post" class="stack-form" novalidate data-validate>
+            <div class="field">
+                <label for="email">Email address</label>
+                <input id="email" type="email" name="email" placeholder="you@example.com"
+                       required autocomplete="email" autofocus>
+            </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <div class="password-wrap">
+                    <input id="password" type="password" name="password" placeholder="Your password"
+                           required autocomplete="current-password">
+                    <button type="button" class="password-toggle" data-toggle-password="password"
+                            aria-label="Show password">Show</button>
+                </div>
+            </div>
+            <button class="button button-primary full" type="submit">Login →</button>
+        </form>
+
+        <p class="form-bottom">New here? <a th:href="@{/register}">Create an account</a></p>
+        <p class="form-bottom small">Store administrator? <a th:href="@{/admin/login}">Admin login</a></p>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

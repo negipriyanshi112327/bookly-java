@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Orders')}"></head>
+<body class="admin-body">
+<header th:replace="~{fragments/navbar :: adminNav}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <div class="page-header">
+        <p class="eyebrow">SALES</p>
+        <h1 class="page-title">Orders</h1>
+        <p class="page-subtitle"><span th:text="${#lists.size(orders)}">0</span> order(s) shown.</p>
+    </div>
+
+    <form class="filter-bar" method="get" th:action="@{/admin/orders}" role="search">
+        <div class="field grow">
+            <label for="q">Order ID, customer name or email</label>
+            <input id="q" type="search" name="q" th:value="${query}" maxlength="100" placeholder="e.g. 12 or priya">
+        </div>
+        <div class="field">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">All statuses</option>
+                <option th:each="s : ${statuses}" th:value="${s.key}" th:text="${s.label}" th:selected="${s == selectedStatus}">Pending</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button class="button button-primary" type="submit">Filter</button>
+            <a class="button button-outline" th:href="@{/admin/orders}">Reset</a>
+        </div>
+    </form>
+
+    <div class="empty-state card" th:if="${#lists.isEmpty(orders)}">
+        <h3>No orders found</h3>
+    </div>
+
+    <div class="table-wrap card" th:unless="${#lists.isEmpty(orders)}">
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th scope="col">Order</th>
+                <th scope="col">Date</th>
+                <th scope="col">Customer</th>
+                <th scope="col">Total</th>
+                <th scope="col">Payment</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="o : ${orders}">
+                <td data-label="Order"><strong th:text="'#' + ${o.id}">#1</strong></td>
+                <td data-label="Date" th:text="${#temporals.format(o.orderDate, 'dd MMM yyyy, hh:mm a')}">date</td>
+                <td data-label="Customer">
+                    <span th:text="${o.customerName}">Name</span><br>
+                    <span class="muted small" th:if="${o.user != null}" th:text="${o.user.email}">email</span>
+                </td>
+                <td data-label="Total" th:text="'₹' + ${#numbers.formatDecimal(o.totalAmount, 1, 'COMMA', 2, 'POINT')}">₹0</td>
+                <td data-label="Payment">
+                    <span th:text="${o.paymentMethod != null ? o.paymentMethod.key : 'COD'}">COD</span> ·
+                    <span class="muted small" th:text="${o.paymentStatus != null ? o.paymentStatus.label : ''}">Pending</span>
+                </td>
+                <td data-label="Status"><span class="status-pill" th:classappend="'status-' + ${o.status.key}" th:text="${o.status.label}">Pending</span></td>
+                <td><a class="button button-small button-outline" th:href="@{/admin/orders/{id}(id=${o.id})}">Manage</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: adminFooter}"></footer>
+</body>
+</html>

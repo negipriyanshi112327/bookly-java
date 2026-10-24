@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Checkout')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <div class="page-header">
+        <p class="eyebrow">STEP 2 OF 2</p>
+        <h1 class="page-title">Checkout</h1>
+        <p class="page-subtitle">Enter your delivery details. You pay in cash when the books arrive.</p>
+    </div>
+
+    <div class="cart-layout">
+        <section class="card">
+            <h2 class="card-title">Delivery details</h2>
+            <form th:action="@{/checkout}" th:object="${form}" method="post" class="stack-form" novalidate
+                  data-validate data-once>
+                <input type="hidden" name="checkoutToken" th:value="${checkoutToken}">
+
+                <div class="field" th:classappend="${#fields.hasErrors('customerName')} ? 'has-error'">
+                    <label for="customerName">Recipient name</label>
+                    <input id="customerName" type="text" th:field="*{customerName}" required minlength="2" maxlength="100"
+                           autocomplete="name">
+                    <p class="field-error" th:if="${#fields.hasErrors('customerName')}" th:errors="*{customerName}">Error</p>
+                </div>
+
+                <div class="field" th:classappend="${#fields.hasErrors('phone')} ? 'has-error'">
+                    <label for="phone">Mobile number</label>
+                    <input id="phone" type="tel" th:field="*{phone}" required maxlength="16" autocomplete="tel"
+                           placeholder="98XXXXXXXX" pattern="(\+91[\- ]?)?[6-9]\d{9}" aria-describedby="phoneHint">
+                    <p class="hint" id="phoneHint">10-digit Indian mobile number, for the delivery partner.</p>
+                    <p class="field-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Error</p>
+                </div>
+
+                <div class="field" th:classappend="${#fields.hasErrors('address')} ? 'has-error'">
+                    <label for="address">Delivery address</label>
+                    <textarea id="address" th:field="*{address}" rows="4" required minlength="10" maxlength="250"
+                              autocomplete="street-address"
+                              placeholder="House/flat, street, area, city, PIN code"></textarea>
+                    <p class="field-error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}">Error</p>
+                </div>
+
+                <fieldset class="field">
+                    <legend>Payment method</legend>
+                    <label class="choice" th:each="m : ${paymentMethods}">
+                        <input type="radio" th:field="*{paymentMethod}" th:value="${m.key}">
+                        <span th:text="${m.label}">Cash on Delivery</span>
+                    </label>
+                    <p class="hint">Online payment is not available. Please keep the exact amount ready.</p>
+                    <p class="field-error" th:if="${#fields.hasErrors('paymentMethod')}" th:errors="*{paymentMethod}">Error</p>
+                </fieldset>
+
+                <button class="button button-primary full" type="submit" data-loading-text="Placing your order…">
+                    Place order (Cash on Delivery)
+                </button>
+                <a class="button button-outline full" th:href="@{/cart}">← Back to cart</a>
+            </form>
+        </section>
+
+        <aside class="cart-summary card" aria-label="Order summary">
+            <p class="eyebrow">YOUR ORDER</p>
+            <ul class="summary-items">
+                <li th:each="line : ${cart.lines}">
+                    <span><span th:text="${line.book.name}">Title</span> × <span th:text="${line.quantity}">1</span></span>
+                    <span th:text="'₹' + ${#numbers.formatDecimal(line.subtotal, 1, 'COMMA', 2, 'POINT')}">₹399.00</span>
+                </li>
+            </ul>
+            <div class="summary-line"><span>Delivery</span><span>Free</span></div>
+            <div class="summary-total">
+                <span>Total to pay</span>
+                <strong th:text="'₹' + ${#numbers.formatDecimal(cart.total, 1, 'COMMA', 2, 'POINT')}">₹399.00</strong>
+            </div>
+            <p class="hint">The final total is calculated by the server from current prices.</p>
+        </aside>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

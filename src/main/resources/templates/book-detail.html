@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head(${book.name})}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a th:href="@{/}">Home</a> <span>/</span>
+        <a th:if="${book.category != null}" th:href="@{/#books(category=${book.category})}" th:text="${book.category}">Category</a>
+        <span th:if="${book.category != null}">/</span>
+        <span aria-current="page" th:text="${book.name}">Title</span>
+    </nav>
+
+    <article class="detail-layout">
+        <div class="detail-cover">
+            <img th:if="${book.image != null}" th:src="${book.image}" th:alt="'Cover of ' + ${book.name}"
+                 onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+            <div class="book-cover-fallback large" th:hidden="${book.image != null}" aria-hidden="true">
+                <span th:text="${book.name}">Title</span>
+            </div>
+        </div>
+
+        <div class="detail-info">
+            <p class="eyebrow" th:text="${book.category != null ? #strings.toUpperCase(book.category) : 'BOOKLY COLLECTION'}">CATEGORY</p>
+            <h1 class="detail-title" th:text="${book.name}">Book title</h1>
+            <p class="detail-author">by <strong th:text="${book.author}">Author</strong></p>
+
+            <a class="detail-rating" th:href="@{/books/{id}/reviews(id=${book.id})}">
+                <th:block th:if="${rating.count > 0}">
+                    <span class="stars" aria-hidden="true"
+                          th:text="${#strings.repeat('★', rating.stars) + #strings.repeat('☆', 5 - rating.stars)}">★★★★☆</span>
+                    <span th:text="${rating.display + ' out of 5 · ' + rating.count + (rating.count == 1 ? ' review' : ' reviews')}">4.0 out of 5</span>
+                </th:block>
+                <span th:if="${rating.count == 0}">No reviews yet</span>
+            </a>
+
+            <p class="detail-price" th:text="'₹' + ${#numbers.formatDecimal(book.price, 1, 'COMMA', 2, 'POINT')}">₹399.00</p>
+
+            <p class="stock-pill inline"
+               th:classappend="${!book.inStock} ? 'stock-out' : (${book.lowStock} ? 'stock-low' : 'stock-in')"
+               th:text="${book.availabilityLabel}">In stock</p>
+
+            <p class="detail-description" th:text="${book.description != null ? book.description : 'No description available yet.'}">Description</p>
+
+            <div class="detail-actions">
+                <form class="inline-form" th:action="@{/cart/add/{id}(id=${book.id})}" method="post"
+                      sec:authorize="!hasRole('ADMIN')" th:if="${book.inStock}">
+                    <input type="hidden" name="redirectTo" th:value="${currentUrl}">
+                    <label class="visually-hidden" for="qty">Quantity</label>
+                    <input id="qty" class="qty-input" type="number" name="quantity" value="1" min="1"
+                           th:max="${book.stockQuantity < 10 ? book.stockQuantity : 10}" required>
+                    <button class="button button-primary" type="submit">Add to cart</button>
+                </form>
+                <button class="button button-outline" type="button" disabled th:unless="${book.inStock}">Out of stock</button>
+
+                <th:block sec:authorize="hasRole('CUSTOMER')">
+                    <form th:unless="${#sets.contains(wishlistIds, book.id)}"
+                          th:action="@{/wishlist/add/{id}(id=${book.id})}" method="post">
+                        <input type="hidden" name="redirectTo" th:value="${currentUrl}">
+                        <button class="button button-outline" type="submit">♡ Save to wishlist</button>
+                    </form>
+                    <form th:if="${#sets.contains(wishlistIds, book.id)}"
+                          th:action="@{/wishlist/remove/{id}(id=${book.id})}" method="post">
+                        <input type="hidden" name="redirectTo" th:value="${currentUrl}">
+                        <button class="button button-outline" type="submit">♥ Saved – remove</button>
+                    </form>
+                </th:block>
+                <a class="button button-outline" sec:authorize="isAnonymous()" th:href="@{/login(required)}">♡ Log in to save</a>
+            </div>
+
+            <dl class="detail-facts">
+                <div><dt>Author</dt><dd th:text="${book.author}">Author</dd></div>
+                <div><dt>Category</dt><dd th:text="${book.category != null ? book.category : '—'}">Category</dd></div>
+                <div><dt>Availability</dt><dd th:text="${book.inStock ? book.stockQuantity + ' in stock' : 'Out of stock'}">In stock</dd></div>
+                <div><dt>Payment</dt><dd>Cash on Delivery</dd></div>
+            </dl>
+        </div>
+    </article>
+
+    <section class="detail-reviews">
+        <div class="section-head">
+            <h2>Reader reviews</h2>
+            <a class="text-link" th:href="@{/books/{id}/reviews(id=${book.id})}">
+                <span th:text="${canReview} ? 'Write or edit your review →' : 'See all reviews →'">See all reviews →</span>
+            </a>
+        </div>
+        <p class="muted" th:if="${#lists.isEmpty(latestReviews)}">
+            No reviews yet. Customers who receive this book can share what they thought.
+        </p>
+        <div class="review-list">
+            <article class="review-card" th:each="r : ${latestReviews}">
+                <header>
+                    <span class="stars" th:attr="aria-label=${r.rating} + ' out of 5 stars'"
+                          th:text="${#strings.repeat('★', r.rating) + #strings.repeat('☆', 5 - r.rating)}">★★★★★</span>
+                    <strong th:text="${r.user.name}">Reader</strong>
+                    <span class="badge badge-soft">Verified purchase</span>
+                    <time class="muted" th:text="${#temporals.format(r.createdAt, 'dd MMM yyyy')}">01 Jan 2026</time>
+                </header>
+                <p th:text="${r.comment}">Review text</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="books-section related-section" th:unless="${#lists.isEmpty(related)}">
+        <div class="section-head">
+            <h2>More in <span th:text="${book.category}">category</span></h2>
+        </div>
+        <div class="book-grid">
+            <th:block th:each="b : ${related}">
+                <article th:replace="~{fragments/book-card :: card(${b}, ${ratings[b.id]}, ${#sets.contains(wishlistIds, b.id)})}"></article>
+            </th:block>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

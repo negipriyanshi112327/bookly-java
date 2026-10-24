@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head('Shopping Cart')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <div class="page-header">
+        <p class="eyebrow">YOUR SELECTION</p>
+        <h1 class="page-title">Shopping cart</h1>
+    </div>
+
+    <div class="alert alert-info" role="status" th:each="n : ${cart.notices}" th:text="${n}">Notice</div>
+
+    <div class="empty-state card" th:if="${cart.empty}">
+        <div class="empty-icon" aria-hidden="true">♡</div>
+        <h3>Your cart is empty</h3>
+        <p>Discover your next favourite book in our collection.</p>
+        <div class="empty-actions">
+            <a class="button button-primary" th:href="@{/#books}">Explore books</a>
+            <a class="button button-outline" sec:authorize="hasRole('CUSTOMER')" th:href="@{/wishlist}">Open wishlist</a>
+        </div>
+    </div>
+
+    <div class="cart-layout" th:unless="${cart.empty}">
+        <section class="cart-items card" aria-label="Books in your cart">
+            <article class="cart-item" th:each="line : ${cart.lines}" th:classappend="${line.hasIssue()} ? 'has-issue'">
+                <a class="cart-thumb" th:href="@{/books/{id}(id=${line.book.id})}">
+                    <img th:if="${line.book.image != null}" th:src="${line.book.image}" th:alt="'Cover of ' + ${line.book.name}"
+                         loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+                    <span class="thumb-fallback" th:hidden="${line.book.image != null}" th:text="${line.book.name}">Title</span>
+                </a>
+
+                <div class="cart-item-info">
+                    <h2><a th:href="@{/books/{id}(id=${line.book.id})}" th:text="${line.book.name}">Book title</a></h2>
+                    <p class="muted" th:text="${line.book.author}">Author</p>
+                    <p class="muted small">
+                        <span th:text="'₹' + ${#numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT')}">₹399.00</span> each ·
+                        <span class="stock-pill inline"
+                              th:classappend="${!line.book.inStock} ? 'stock-out' : (${line.book.lowStock} ? 'stock-low' : 'stock-in')"
+                              th:text="${line.book.availabilityLabel}">In stock</span>
+                    </p>
+                    <p class="field-error" th:if="${line.hasIssue()}" th:text="${line.issue}">Issue</p>
+
+                    <div class="cart-item-controls">
+                        <div class="qty-control" th:unless="${line.hasIssue()}">
+                            <form th:action="@{/cart/update/{id}(id=${line.book.id})}" method="post">
+                                <input type="hidden" name="quantity" th:value="${line.quantity - 1}">
+                                <button type="submit" class="qty-btn" th:disabled="${line.quantity <= 1}"
+                                        th:attr="aria-label='Decrease quantity of ' + ${line.book.name}">−</button>
+                            </form>
+                            <form th:action="@{/cart/update/{id}(id=${line.book.id})}" method="post" class="qty-form">
+                                <label class="visually-hidden" th:for="'qty-' + ${line.book.id}">Quantity</label>
+                                <input class="qty-input" type="number" name="quantity" min="1"
+                                       th:id="'qty-' + ${line.book.id}" th:max="${line.maxQuantity}"
+                                       th:value="${line.quantity}" data-autosubmit required>
+                                <noscript><button type="submit" class="button button-small button-outline">Update</button></noscript>
+                            </form>
+                            <form th:action="@{/cart/update/{id}(id=${line.book.id})}" method="post">
+                                <input type="hidden" name="quantity" th:value="${line.quantity + 1}">
+                                <button type="submit" class="qty-btn" th:disabled="${line.quantity >= line.maxQuantity}"
+                                        th:attr="aria-label='Increase quantity of ' + ${line.book.name}">+</button>
+                            </form>
+                        </div>
+
+                        <form th:action="@{/cart/remove/{id}(id=${line.book.id})}" method="post">
+                            <button class="link-button danger" type="submit">Remove</button>
+                        </form>
+                    </div>
+                </div>
+
+                <strong class="cart-item-price" th:text="'₹' + ${#numbers.formatDecimal(line.subtotal, 1, 'COMMA', 2, 'POINT')}">₹399.00</strong>
+            </article>
+        </section>
+
+        <aside class="cart-summary card" aria-label="Order summary">
+            <p class="eyebrow">ORDER SUMMARY</p>
+            <div class="summary-line"><span>Items</span><span th:text="${cart.totalItems}">1</span></div>
+            <div class="summary-line"><span>Delivery</span><span>Free</span></div>
+            <div class="summary-total">
+                <span>Total</span>
+                <strong th:text="'₹' + ${#numbers.formatDecimal(cart.total, 1, 'COMMA', 2, 'POINT')}">₹399.00</strong>
+            </div>
+            <p class="hint">Prices are checked again when you place the order. Payment: Cash on Delivery.</p>
+
+            <a class="button button-primary full" th:if="${cart.checkoutReady}" th:href="@{/checkout}"
+               sec:authorize="hasRole('CUSTOMER')">Proceed to checkout →</a>
+            <a class="button button-primary full" th:if="${cart.checkoutReady}" th:href="@{/checkout}"
+               sec:authorize="isAnonymous()">Log in to check out →</a>
+            <p class="field-error" th:unless="${cart.checkoutReady}">Remove unavailable books to continue.</p>
+
+            <a class="button button-outline full" th:href="@{/#books}">Continue shopping</a>
+        </aside>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<!--
+  Reusable book card.
+  book    - the Book
+  rating  - RatingSummary or null
+  saved   - true if the book is in the customer's wishlist
+-->
+<article class="book-card" th:fragment="card(book, rating, saved)">
+    <a class="book-cover-area" th:href="@{/books/{id}(id=${book.id})}"
+       th:attr="aria-label='View details for ' + ${book.name}">
+        <span class="stock-pill"
+              th:classappend="${!book.inStock} ? 'stock-out' : (${book.lowStock} ? 'stock-low' : 'stock-in')"
+              th:text="${book.availabilityLabel}">In stock</span>
+        <img class="book-cover" th:if="${book.image != null}"
+             th:src="${book.image}" th:alt="'Cover of ' + ${book.name}" loading="lazy"
+             onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+        <div class="book-cover-fallback" th:hidden="${book.image != null}" aria-hidden="true">
+            <span th:text="${book.name}">Title</span>
+        </div>
+    </a>
+
+    <div class="book-details">
+        <p class="book-category" th:text="${book.category != null ? #strings.toUpperCase(book.category) : 'BOOKLY COLLECTION'}">CATEGORY</p>
+        <h3><a th:href="@{/books/{id}(id=${book.id})}" th:text="${book.name}">Book title</a></h3>
+        <p class="book-author" th:text="${book.author}">Author</p>
+
+        <p class="book-rating" th:if="${rating != null and rating.count > 0}">
+            <span class="stars" aria-hidden="true"
+                  th:text="${#strings.repeat('★', rating.stars) + #strings.repeat('☆', 5 - rating.stars)}">★★★★☆</span>
+            <span th:text="${rating.display + ' (' + rating.count + ')'}">4.0 (3)</span>
+        </p>
+        <p class="book-rating muted" th:unless="${rating != null and rating.count > 0}">No reviews yet</p>
+
+        <div class="book-card-bottom">
+            <p class="book-price" th:text="'₹' + ${#numbers.formatDecimal(book.price, 1, 'COMMA', 2, 'POINT')}">₹399.00</p>
+
+            <div class="book-card-actions">
+                <form th:action="@{/cart/add/{id}(id=${book.id})}" method="post" sec:authorize="!hasRole('ADMIN')">
+                    <input type="hidden" name="redirectTo" th:value="${currentUrl}">
+                    <button class="add-to-cart" type="submit" th:disabled="${!book.inStock}"
+                            th:attr="aria-label=${book.inStock ? 'Add ' + book.name + ' to cart' : book.name + ' is out of stock'}">
+                        <span th:text="${book.inStock} ? 'Add to Cart' : 'Out of stock'">Add to Cart</span>
+                        <span class="cart-arrow" aria-hidden="true">↗</span>
+                    </button>
+                </form>
+
+                <th:block sec:authorize="hasRole('CUSTOMER')">
+                    <form th:unless="${saved}" th:action="@{/wishlist/add/{id}(id=${book.id})}" method="post">
+                        <input type="hidden" name="redirectTo" th:value="${currentUrl}">
+                        <button class="wish-btn" type="submit" title="Save to wishlist"
+                                th:attr="aria-label='Save ' + ${book.name} + ' to wishlist'">♡</button>
+                    </form>
+                    <form th:if="${saved}" th:action="@{/wishlist/remove/{id}(id=${book.id})}" method="post">
+                        <input type="hidden" name="redirectTo" th:value="${currentUrl}">
+                        <button class="wish-btn is-saved" type="submit" title="Remove from wishlist"
+                                th:attr="aria-label='Remove ' + ${book.name} + ' from wishlist'">♥</button>
+                    </form>
+                </th:block>
+                <a class="wish-btn" sec:authorize="isAnonymous()" th:href="@{/login(required)}"
+                   title="Log in to save books" aria-label="Log in to use the wishlist">♡</a>
+            </div>
+        </div>
+    </div>
+</article>
+
+</body>
+</html>

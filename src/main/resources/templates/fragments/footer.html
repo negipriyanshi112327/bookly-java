@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<footer class="site-footer" th:fragment="footer">
+    <div class="footer-main">
+        <div>
+            <a class="logo footer-logo" th:href="@{/}">bookly<span>.</span></a>
+            <p>Made for readers, dreamers and the endlessly curious. Cash on Delivery across India.</p>
+        </div>
+        <div class="footer-links">
+            <a th:href="@{/}">Home</a>
+            <a th:href="@{/book-compass}">Book Compass</a>
+            <a th:href="@{/cart}">Shopping Cart</a>
+            <a th:href="@{/orders}">My Orders</a>
+        </div>
+        <div class="footer-links">
+            <a th:href="@{/login}">Customer Login</a>
+            <a th:href="@{/register}">Create Account</a>
+            <a th:href="@{/wishlist}">Wishlist</a>
+            <a th:href="@{/admin/login}">Admin Access</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>© 2026 Bookly. Every story starts somewhere.</span>
+        <a th:href="@{/}">MADE FOR THE LOVE OF READING ✳</a>
+    </div>
+</footer>
+
+<footer class="site-footer admin-footer" th:fragment="adminFooter">
+    <div class="footer-bottom">
+        <span>Bookly Admin · store management</span>
+        <a th:href="@{/}">Open store ↗</a>
+    </div>
+</footer>
+
+</body>
+</html>

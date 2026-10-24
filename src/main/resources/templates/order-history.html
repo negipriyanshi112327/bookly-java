@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('My Orders')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <div class="page-header">
+        <p class="eyebrow">YOUR ACCOUNT</p>
+        <h1 class="page-title">My orders</h1>
+    </div>
+
+    <div class="empty-state card" th:if="${#lists.isEmpty(orders)}">
+        <div class="empty-icon" aria-hidden="true">✉</div>
+        <h3>No orders yet</h3>
+        <p>When you place an order it will appear here so you can track it.</p>
+        <a class="button button-primary" th:href="@{/#books}">Start shopping</a>
+    </div>
+
+    <div class="table-wrap card" th:unless="${#lists.isEmpty(orders)}">
+        <table class="data-table">
+            <caption class="visually-hidden">Your orders</caption>
+            <thead>
+            <tr>
+                <th scope="col">Order</th>
+                <th scope="col">Date</th>
+                <th scope="col">Items</th>
+                <th scope="col">Total</th>
+                <th scope="col">Payment</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="o : ${orders}">
+                <td data-label="Order"><strong th:text="'#' + ${o.id}">#1</strong></td>
+                <td data-label="Date" th:text="${#temporals.format(o.orderDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                <td data-label="Items" th:text="${o.itemCount}">2</td>
+                <td data-label="Total" th:text="'₹' + ${#numbers.formatDecimal(o.totalAmount, 1, 'COMMA', 2, 'POINT')}">₹0</td>
+                <td data-label="Payment" th:text="${o.paymentMethod != null ? o.paymentMethod.label : 'Cash on Delivery'}">COD</td>
+                <td data-label="Status"><span class="status-pill" th:classappend="'status-' + ${o.status.key}" th:text="${o.status.label}">Pending</span></td>
+                <td><a class="button button-small button-outline" th:href="@{/orders/{id}(id=${o.id})}">View</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

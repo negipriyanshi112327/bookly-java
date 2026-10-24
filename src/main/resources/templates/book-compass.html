@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Book Compass')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar}"></header>
+
+<main id="main" class="page">
+    <div th:replace="~{fragments/navbar :: flash}"></div>
+
+    <div class="page-header">
+        <p class="eyebrow">BOOK COMPASS ✳</p>
+        <h1 class="page-title">Find your next read</h1>
+        <p class="page-subtitle">
+            Tell us what you like and Book Compass will point you to matching books from our shelves —
+            with the reason for every suggestion. It is a simple rule-based matcher, not AI.
+        </p>
+    </div>
+
+    <div class="compass-layout">
+        <section class="card">
+            <form th:action="@{/book-compass}" method="get" class="stack-form" data-loading-form>
+                <input type="hidden" name="go" value="1">
+                <div class="alert alert-error" role="alert" th:if="${formError}" th:text="${formError}">Error</div>
+
+                <div class="field">
+                    <label for="category">Favourite category</label>
+                    <select id="category" name="category">
+                        <option value="">Any category</option>
+                        <option th:each="c : ${categories}" th:value="${c}" th:text="${c}" th:selected="${c == category}">Fiction</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="author">Favourite author</label>
+                    <input id="author" type="text" name="author" th:value="${author}" maxlength="100"
+                           placeholder="e.g. Orwell">
+                </div>
+                <div class="field">
+                    <label for="interests">Reading interests</label>
+                    <input id="interests" type="text" name="interests" th:value="${interests}" maxlength="150"
+                           placeholder="e.g. habits, money, history" aria-describedby="interestHint">
+                    <p class="hint" id="interestHint">Up to 5 keywords, separated by commas or spaces.</p>
+                </div>
+                <div class="field">
+                    <label for="maxPrice">Budget (optional, ₹)</label>
+                    <input id="maxPrice" type="number" name="maxPrice" min="1" step="1" th:value="${maxPrice}"
+                           placeholder="e.g. 400">
+                </div>
+                <button class="button button-primary full" type="submit" data-loading-text="Finding books…">Show my recommendations</button>
+            </form>
+
+            <details class="how-it-works">
+                <summary>How does Book Compass score books?</summary>
+                <ul>
+                    <li>+4 when the author matches</li>
+                    <li>+3 when the category matches</li>
+                    <li>+2 for each interest keyword found in the title, description or category</li>
+                    <li>+1 bonus if readers rate it 4★ or more</li>
+                    <li>Out-of-stock books and books above your budget are skipped</li>
+                </ul>
+            </details>
+        </section>
+
+        <section class="compass-results" aria-live="polite">
+            <div class="empty-state card" th:if="${result == null}">
+                <div class="empty-icon" aria-hidden="true">✳</div>
+                <h3>Your suggestions will appear here</h3>
+                <p>Pick at least one preference on the left.</p>
+            </div>
+
+            <th:block th:if="${result != null}">
+                <div class="alert alert-info" th:if="${result.fallback}">
+                    No books matched those preferences, so here are popular in-stock books instead.
+                    Try a different category or keyword.
+                </div>
+                <div class="empty-state card" th:if="${#lists.isEmpty(result.recommendations)}">
+                    <h3>No books available</h3>
+                    <p>Nothing is in stock within that budget right now.</p>
+                </div>
+
+                <article class="rec-card card" th:each="rec, s : ${result.recommendations}">
+                    <a class="cart-thumb" th:href="@{/books/{id}(id=${rec.book.id})}">
+                        <img th:if="${rec.book.image != null}" th:src="${rec.book.image}" th:alt="'Cover of ' + ${rec.book.name}"
+                             loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+                        <span class="thumb-fallback" th:hidden="${rec.book.image != null}" th:text="${rec.book.name}">Title</span>
+                    </a>
+                    <div class="rec-info">
+                        <p class="eyebrow">
+                            <span th:text="'#' + ${s.count}">#1</span>
+                            <span th:unless="${result.fallback}" th:text="' · MATCH SCORE ' + ${rec.score}"> · SCORE</span>
+                        </p>
+                        <h2><a th:href="@{/books/{id}(id=${rec.book.id})}" th:text="${rec.book.name}">Title</a></h2>
+                        <p class="muted">
+                            <span th:text="${rec.book.author}">Author</span> ·
+                            <span th:text="${rec.book.category}">Category</span> ·
+                            <strong th:text="'₹' + ${#numbers.formatDecimal(rec.book.price, 1, 'COMMA', 2, 'POINT')}">₹0</strong>
+                        </p>
+                        <ul class="reason-list">
+                            <li th:each="reason : ${rec.reasons}" th:text="${reason}">Reason</li>
+                        </ul>
+                        <form th:action="@{/cart/add/{id}(id=${rec.book.id})}" method="post">
+                            <input type="hidden" name="redirectTo" th:value="${currentUrl}">
+                            <button class="button button-small button-primary" type="submit">Add to cart</button>
+                            <a class="button button-small button-outline" th:href="@{/books/{id}(id=${rec.book.id})}">Details</a>
+                        </form>
+                    </div>
+                </article>
+            </th:block>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

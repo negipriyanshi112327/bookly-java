@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Something went wrong | Bookly</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header class="site-header">
+    <a class="logo" th:href="@{/}">bookly<span>.</span></a>
+    <div class="header-actions"><a class="nav-link" th:href="@{/}">Back to store</a></div>
+</header>
+
+<main id="main" class="auth-page">
+    <section class="auth-card center">
+        <p class="eyebrow" th:text="'ERROR ' + (${status} ?: '')">ERROR</p>
+        <h1 th:text="${title != null} ? ${title} : (${status == 404} ? 'Page not found' : (${status == 403} ? 'Access denied' : 'Something went wrong'))">Something went wrong</h1>
+        <p class="intro" th:if="${title != null and message != null}" th:text="${message}">Message</p>
+        <p class="intro" th:unless="${title != null and message != null}"
+           th:text="${status == 404} ? 'The page you are looking for does not exist or is no longer available.' : 'Please try again in a moment. If the problem continues, contact the store.'">
+            Please try again.
+        </p>
+        <div class="form-actions center">
+            <a class="button button-primary" th:href="@{/}">Go to the store</a>
+            <a class="button button-outline" href="javascript:history.back()">Go back</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Admin Login')}"></head>
+<body class="admin-body">
+<header class="site-header">
+    <a class="logo" th:href="@{/}">bookly<span>.</span> <small class="logo-tag">Admin</small></a>
+    <div class="header-actions"><a class="nav-link" th:href="@{/}">Visit store</a></div>
+</header>
+
+<main id="main" class="auth-page">
+    <section class="auth-card">
+        <p class="eyebrow">BOOKLY MANAGEMENT</p>
+        <h1>Admin login</h1>
+        <p class="intro">Sign in to manage books, orders, customers and inventory.</p>
+
+        <div class="alert alert-info" role="status" th:if="${param.required}">Please log in as an administrator to continue.</div>
+        <div class="alert alert-success" role="status" th:if="${param.logout}">You have been logged out.</div>
+        <div class="alert alert-error" role="alert" th:if="${param.error}">Invalid admin email or password.</div>
+        <div class="alert alert-error" role="alert" th:if="${param.disabled}">This administrator account is disabled.</div>
+
+        <form th:action="@{/admin/login}" method="post" class="stack-form" novalidate data-validate>
+            <div class="field">
+                <label for="email">Admin email</label>
+                <input id="email" type="email" name="email" placeholder="admin email"
+                       autocomplete="username" required autofocus>
+            </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <div class="password-wrap">
+                    <input id="password" type="password" name="password" placeholder="Password"
+                           autocomplete="current-password" required>
+                    <button type="button" class="password-toggle" data-toggle-password="password"
+                            aria-label="Show password">Show</button>
+                </div>
+            </div>
+            <button class="button button-primary full" type="submit">Sign in to dashboard →</button>
+        </form>
+
+        <p class="form-bottom">Are you a customer? <a th:href="@{/login}">Customer login</a></p>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/footer :: adminFooter}"></footer>
+</body>
+</html>
